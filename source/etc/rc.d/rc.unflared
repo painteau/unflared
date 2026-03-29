@@ -11,7 +11,7 @@ start() {
     return 1
   fi
 
-  if [ ! -f "$CFG" ] || ! grep -q "^TOKEN=" "$CFG"; then
+  if [ ! -f "$CFG" ] || ! grep -q "^TOKEN=." "$CFG"; then
     echo "unflared: no token configured in $CFG"
     return 1
   fi
@@ -22,7 +22,16 @@ start() {
     return 1
   fi
 
-  $BIN tunnel --no-autoupdate run --token "$TOKEN" >> /var/log/cloudflared.log 2>&1 &
+  # Wrapper loop: relance cloudflared automatiquement si il crash.
+  # S'arrête si le PIDFILE est supprimé (signal de stop()).
+  (
+    while true; do
+      $BIN tunnel --no-autoupdate run --token "$TOKEN" >> /var/log/cloudflared.log 2>&1
+      [ -f "$PIDFILE" ] || break
+      echo "$(date '+%Y-%m-%d %H:%M:%S'): cloudflared exited unexpectedly, restarting in 5s..." >> /var/log/cloudflared.log
+      sleep 5
+    done
+  ) &
   echo $! > "$PIDFILE"
   echo "cloudflared started (PID $!)"
 }
@@ -30,14 +39,11 @@ start() {
 stop() {
   if [ -f "$PIDFILE" ]; then
     PID=$(cat "$PIDFILE")
-    if kill -0 "$PID" 2>/dev/null; then
-      kill "$PID"
-      sleep 1
-    fi
-    rm -f "$PIDFILE"
-  else
-    pkill -f "cloudflared tunnel" 2>/dev/null
+    rm -f "$PIDFILE"       # Supprime en premier — signal au wrapper de ne pas relancer
+    kill "$PID" 2>/dev/null
+    sleep 1
   fi
+  pkill -f "cloudflared tunnel" 2>/dev/null   # Tue le process enfant cloudflared
   echo "cloudflared stopped"
 }
 
