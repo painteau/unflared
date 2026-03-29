@@ -88,6 +88,16 @@ Format: `<cloudflared_version>.<plugin_revision>` — e.g. `2026.3.0.1` = cloudf
 
 ---
 
+## Roadmap
+
+Improvements already in `main`, included in the next release:
+
+- [x] Auto-restart cloudflared on crash (wrapper loop, no watchdog dependency)
+- [x] Unraid notification on crash (throttled to max 1 every 4 hours)
+- [x] Unraid notification after install when no token is configured yet
+
+---
+
 ## License
 
 [MIT](LICENSE) © 2026 Painteau
