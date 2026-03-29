@@ -90,11 +90,20 @@ Format: `<cloudflared_version>.<plugin_revision>` — e.g. `2026.3.0.1` = cloudf
 
 ## Roadmap
 
-Improvements already in `main`, included in the next release:
+Already in `main`, included in the next release:
 
 - [x] Auto-restart cloudflared on crash (wrapper loop, no watchdog dependency)
 - [x] Unraid notification on crash (throttled to max 1 every 4 hours)
 - [x] Unraid notification after install when no token is configured yet
+
+Planned:
+
+- [ ] Log viewer in the settings page (tail of `/var/log/cloudflared.log`)
+- [ ] Log rotation to prevent unbounded growth during uptime
+- [ ] Token format validation before saving
+- [ ] Graceful stop with SIGKILL fallback after timeout
+- [ ] Tunnel metrics in the UI (cloudflared exposes a local metrics endpoint)
+- [ ] Community Applications (CA) store listing
 
 ---
 
