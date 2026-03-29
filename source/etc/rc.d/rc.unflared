@@ -6,7 +6,7 @@ BIN="/usr/local/bin/cloudflared"
 PIDFILE="/var/run/cloudflared.pid"
 NOTIFY="/usr/local/emhttp/webGui/scripts/notify"
 NOTIF_TS="/var/run/cloudflared-notif.ts"
-NOTIF_THROTTLE=1800   # 30 minutes entre deux notifications de crash
+NOTIF_THROTTLE=14400  # 4 heures entre deux notifications de crash
 
 notify_crash() {
   local now
