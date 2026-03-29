@@ -73,6 +73,8 @@ install -m 0755 /boot/config/plugins/unflared/cloudflared /usr/local/bin/cloudfl
 echo "unflared: cloudflared $(/usr/local/bin/cloudflared --version 2>&amp;1 | grep -oP '\d+\.\d+\.\d+' | head -1) installed"
 if grep -q "^TOKEN=.\+" /boot/config/plugins/unflared/unflared.cfg 2>/dev/null; then
   /etc/rc.d/rc.unflared start
+else
+  /usr/local/emhttp/webGui/scripts/notify -s "unflared installed" -d "Cloudflare Tunnel plugin is ready. Go to Settings &gt; Network Services &gt; unflared to configure your tunnel token." -i "normal" 2>/dev/null
 fi
 exit 0
     </INLINE>

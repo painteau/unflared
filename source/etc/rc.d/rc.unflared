@@ -4,6 +4,20 @@
 CFG="/boot/config/plugins/unflared/unflared.cfg"
 BIN="/usr/local/bin/cloudflared"
 PIDFILE="/var/run/cloudflared.pid"
+NOTIFY="/usr/local/emhttp/webGui/scripts/notify"
+NOTIF_TS="/var/run/cloudflared-notif.ts"
+NOTIF_THROTTLE=1800   # 30 minutes entre deux notifications de crash
+
+notify_crash() {
+  local now
+  now=$(date +%s)
+  local last=0
+  [ -f "$NOTIF_TS" ] && last=$(cat "$NOTIF_TS")
+  if [ $((now - last)) -gt $NOTIF_THROTTLE ]; then
+    echo "$now" > "$NOTIF_TS"
+    "$NOTIFY" -s "unflared" -d "cloudflared tunnel crashed and is restarting automatically." -i "warning" 2>/dev/null
+  fi
+}
 
 start() {
   if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
@@ -29,6 +43,7 @@ start() {
       $BIN tunnel --no-autoupdate run --token "$TOKEN" >> /var/log/cloudflared.log 2>&1
       [ -f "$PIDFILE" ] || break
       echo "$(date '+%Y-%m-%d %H:%M:%S'): cloudflared exited unexpectedly, restarting in 5s..." >> /var/log/cloudflared.log
+      notify_crash
       sleep 5
     done
   ) &
