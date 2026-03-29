@@ -1,0 +1,19 @@
+#!/bin/bash
+# unflared-check — Daily update check for cloudflared
+
+BIN="/usr/local/bin/cloudflared"
+
+[ -x "$BIN" ] || exit 0
+
+INSTALLED=$($BIN --version 2>&1 | grep -oP '\d+\.\d+\.\d+' | head -1)
+LATEST=$(curl -sf --max-time 10 https://api.github.com/repos/cloudflare/cloudflared/releases/latest \
+  | grep -oP '"tag_name": "\K[^"]+' | head -1)
+
+[ -z "$INSTALLED" ] || [ -z "$LATEST" ] && exit 0
+[ "$INSTALLED" = "$LATEST" ] && exit 0
+
+/usr/local/emhttp/webGui/include/notify.sh \
+  -e "unflared" \
+  -s "Update available: cloudflared $LATEST" \
+  -d "Installed: $INSTALLED — Latest: $LATEST. Update via the unflared plugin page." \
+  -i "normal"

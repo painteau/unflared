@@ -1,0 +1,94 @@
+<?xml version='1.0' standalone='yes'?>
+<!DOCTYPE PLUGIN [
+  <!ENTITY name             "unflared">
+  <!ENTITY author           "painteau">
+  <!ENTITY version          "2026.3.0.1">
+  <!ENTITY pluginURL        "https://raw.githubusercontent.com/painteau/unflared/main/unflared.plg">
+  <!ENTITY rawURL           "https://raw.githubusercontent.com/painteau/unflared/main">
+  <!ENTITY cloudflaredVer   "2026.3.0">
+  <!ENTITY cloudflaredURL   "https://github.com/painteau/unflared/releases/download/2026.3.0.1/cloudflared-linux-amd64">
+]>
+
+<PLUGIN name="&name;"
+        author="&author;"
+        version="&version;"
+        pluginURL="&pluginURL;"
+        min="6.9.0"
+        support="https://github.com/painteau/unflared">
+
+  <CHANGES>
+    ###2026.3.0.1###
+    - Initial release, cloudflared 2026.3.0
+    - Native service (no Docker dependency)
+    - Unraid notification on update available
+    - Settings page: token config, start/stop/restart, version status
+  </CHANGES>
+
+  <!-- 1. Config directory (persistent, USB) -->
+  <FILE Name="/boot/config/plugins/unflared/.keep">
+    <INLINE></INLINE>
+  </FILE>
+
+  <!-- 2. cloudflared binary (persistent on USB) -->
+  <FILE Name="/boot/config/plugins/unflared/cloudflared">
+    <URL>&cloudflaredURL;</URL>
+  </FILE>
+
+  <!-- 3. rc script -->
+  <FILE Name="/etc/rc.d/rc.unflared" Mode="0755">
+    <URL>&rawURL;/source/etc/rc.d/rc.unflared</URL>
+  </FILE>
+
+  <!-- 4. Settings page + icon -->
+  <FILE Name="/usr/local/emhttp/plugins/unflared/unflared.page">
+    <URL>&rawURL;/source/usr/local/emhttp/plugins/unflared/unflared.page</URL>
+  </FILE>
+
+  <FILE Name="/usr/local/emhttp/plugins/unflared/unflared.png">
+    <URL>&rawURL;/source/usr/local/emhttp/plugins/unflared/unflared.png</URL>
+  </FILE>
+
+  <FILE Name="/usr/local/emhttp/plugins/unflared/include/exec.php">
+    <URL>&rawURL;/source/usr/local/emhttp/plugins/unflared/include/exec.php</URL>
+  </FILE>
+
+  <!-- 5. Boot event -->
+  <FILE Name="/usr/local/emhttp/plugins/unflared/event/started" Mode="0755">
+    <URL>&rawURL;/source/usr/local/emhttp/plugins/unflared/event/started</URL>
+  </FILE>
+
+  <!-- 6. Daily update check -->
+  <FILE Name="/etc/cron.daily/unflared-check" Mode="0755">
+    <URL>&rawURL;/source/etc/cron.daily/unflared-check</URL>
+  </FILE>
+
+  <!-- 7. Post-install script -->
+  <FILE Run="/bin/bash">
+    <INLINE>
+chmod +x /etc/rc.d/rc.unflared
+chmod +x /etc/cron.daily/unflared-check
+chmod +x /usr/local/emhttp/plugins/unflared/event/started
+install -m 0755 /boot/config/plugins/unflared/cloudflared /usr/local/bin/cloudflared
+[ -f /boot/config/plugins/unflared/unflared.cfg ] || touch /boot/config/plugins/unflared/unflared.cfg
+echo "unflared: cloudflared $(/usr/local/bin/cloudflared --version 2>&amp;1 | grep -oP '\d+\.\d+\.\d+' | head -1) installed"
+if grep -q "^TOKEN=.\+" /boot/config/plugins/unflared/unflared.cfg 2>/dev/null; then
+  /etc/rc.d/rc.unflared start
+fi
+exit 0
+    </INLINE>
+  </FILE>
+
+  <!-- 8. Uninstall script -->
+  <FILE Run="/bin/bash" Method="remove">
+    <INLINE>
+/etc/rc.d/rc.unflared stop 2>/dev/null
+rm -f /usr/local/bin/cloudflared
+rm -f /etc/rc.d/rc.unflared
+rm -f /etc/cron.daily/unflared-check
+rm -rf /usr/local/emhttp/plugins/unflared
+echo "unflared: uninstalled (config kept in /boot/config/plugins/unflared/)"
+exit 0
+    </INLINE>
+  </FILE>
+
+</PLUGIN>

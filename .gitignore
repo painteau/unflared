@@ -1,0 +1,4 @@
+.claude/
+cloudflared-linux-amd64
+*.png
+!source/**/*.png

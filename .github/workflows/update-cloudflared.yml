@@ -1,0 +1,95 @@
+name: Update cloudflared
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # Daily at 06:00 UTC
+  workflow_dispatch:       # Manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get latest cloudflared version
+        id: latest
+        run: |
+          VERSION=$(curl -sf https://api.github.com/repos/cloudflare/cloudflared/releases/latest \
+            | jq -r '.tag_name')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Latest cloudflared: $VERSION"
+
+      - name: Get current cloudflared version in PLG
+        id: current
+        run: |
+          VERSION=$(grep 'cloudflaredVer' unflared.plg | grep -oP '"\K[^"]+(?=")')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current cloudflared in PLG: $VERSION"
+
+      - name: Check if update needed
+        id: check
+        run: |
+          if [ "${{ steps.latest.outputs.version }}" != "${{ steps.current.outputs.version }}" ]; then
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+            echo "Update needed: ${{ steps.current.outputs.version }} -> ${{ steps.latest.outputs.version }}"
+          else
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+            echo "Already up to date: ${{ steps.current.outputs.version }}"
+          fi
+
+      - name: Download cloudflared binary
+        if: steps.check.outputs.needs_update == 'true'
+        run: |
+          NEW_CF="${{ steps.latest.outputs.version }}"
+          curl -fL "https://github.com/cloudflare/cloudflared/releases/download/${NEW_CF}/cloudflared-linux-amd64" \
+            -o cloudflared-linux-amd64
+          chmod +x cloudflared-linux-amd64
+          echo "Downloaded: $(./cloudflared-linux-amd64 --version)"
+
+      - name: Update PLG
+        if: steps.check.outputs.needs_update == 'true'
+        run: |
+          NEW_CF="${{ steps.latest.outputs.version }}"
+          NEW_PLUGIN="${NEW_CF}.1"
+
+          # Update version entities
+          sed -i "s|<!ENTITY version.*|<!ENTITY version          \"${NEW_PLUGIN}\">|" unflared.plg
+          sed -i "s|<!ENTITY cloudflaredVer.*|<!ENTITY cloudflaredVer   \"${NEW_CF}\">|" unflared.plg
+          sed -i "s|<!ENTITY cloudflaredURL.*|<!ENTITY cloudflaredURL   \"https://github.com/painteau/unflared/releases/download/${NEW_PLUGIN}/cloudflared-linux-amd64\">|" unflared.plg
+
+          # Prepend new entry in CHANGES (only if not already present)
+          if ! grep -q "###${NEW_PLUGIN}###" unflared.plg; then
+            sed -i "s|  <CHANGES>|  <CHANGES>\n    ###${NEW_PLUGIN}###\n    - Update cloudflared to ${NEW_CF}\n|" unflared.plg
+          fi
+
+          echo "PLG updated to ${NEW_PLUGIN}"
+
+      - name: Create GitHub release with binary
+        if: steps.check.outputs.needs_update == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "${{ steps.latest.outputs.version }}.1"
+          name: "cloudflared ${{ steps.latest.outputs.version }}"
+          body: |
+            Bundles **cloudflared ${{ steps.latest.outputs.version }}** for Unraid.
+
+            ### Install / Update
+            Go to **Plugins → Install Plugin** and paste:
+            ```
+            https://raw.githubusercontent.com/painteau/unflared/main/unflared.plg
+            ```
+          files: cloudflared-linux-amd64
+
+      - name: Commit PLG update
+        if: steps.check.outputs.needs_update == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add unflared.plg
+          git commit -m "chore: update cloudflared to ${{ steps.latest.outputs.version }}"
+          git push

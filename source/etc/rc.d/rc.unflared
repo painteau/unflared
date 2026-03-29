@@ -1,0 +1,66 @@
+#!/bin/bash
+# rc.unflared — Service script for Cloudflare Tunnel (unflared plugin)
+
+CFG="/boot/config/plugins/unflared/unflared.cfg"
+BIN="/usr/local/bin/cloudflared"
+PIDFILE="/var/run/cloudflared.pid"
+
+start() {
+  if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+    echo "cloudflared is already running (PID $(cat $PIDFILE))"
+    return 1
+  fi
+
+  if [ ! -f "$CFG" ] || ! grep -q "^TOKEN=" "$CFG"; then
+    echo "unflared: no token configured in $CFG"
+    return 1
+  fi
+
+  TOKEN=$(grep "^TOKEN=" "$CFG" | cut -d= -f2-)
+  if [ -z "$TOKEN" ]; then
+    echo "unflared: TOKEN is empty"
+    return 1
+  fi
+
+  $BIN tunnel --no-autoupdate run --token "$TOKEN" >> /var/log/cloudflared.log 2>&1 &
+  echo $! > "$PIDFILE"
+  echo "cloudflared started (PID $!)"
+}
+
+stop() {
+  if [ -f "$PIDFILE" ]; then
+    PID=$(cat "$PIDFILE")
+    if kill -0 "$PID" 2>/dev/null; then
+      kill "$PID"
+      sleep 1
+    fi
+    rm -f "$PIDFILE"
+  else
+    pkill -f "cloudflared tunnel" 2>/dev/null
+  fi
+  echo "cloudflared stopped"
+}
+
+restart() {
+  stop
+  sleep 1
+  start
+}
+
+status() {
+  if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+    echo "cloudflared is running (PID $(cat $PIDFILE))"
+    return 0
+  else
+    echo "cloudflared is not running"
+    return 1
+  fi
+}
+
+case "$1" in
+  start)   start ;;
+  stop)    stop ;;
+  restart) restart ;;
+  status)  status ;;
+  *)       echo "Usage: $0 {start|stop|restart|status}" ;;
+esac

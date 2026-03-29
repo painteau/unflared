@@ -1,0 +1,16 @@
+#!/bin/bash
+# unflared — start cloudflared tunnel on Unraid array started
+
+# Install binary from USB to RAM
+if [ -f /boot/config/plugins/unflared/cloudflared ]; then
+  install -m 0755 /boot/config/plugins/unflared/cloudflared /usr/local/bin/cloudflared
+fi
+
+# Start service if token is configured and autostart is enabled (default: yes)
+CFG=/boot/config/plugins/unflared/unflared.cfg
+if grep -q "^TOKEN=.\+" "$CFG" 2>/dev/null; then
+  AUTOSTART=$(grep "^AUTOSTART=" "$CFG" 2>/dev/null | cut -d= -f2)
+  if [ "${AUTOSTART:-yes}" != "no" ]; then
+    /etc/rc.d/rc.unflared start
+  fi
+fi
