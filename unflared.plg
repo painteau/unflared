@@ -3,7 +3,7 @@
   <!ENTITY name             "unflared">
   <!ENTITY author           "painteau">
   <!ENTITY version          "2026.3.0.2">
-  <!ENTITY pluginURL        "https://raw.githubusercontent.com/painteau/unflared/refs/heads/main/unflared.plg">
+  <!ENTITY pluginURL        "https://raw.githubusercontent.com/painteau/unflared/main/unflared.plg">
   <!ENTITY rawURL           "https://raw.githubusercontent.com/painteau/unflared/main">
   <!ENTITY cloudflaredVer   "2026.3.0">
   <!ENTITY cloudflaredURL   "https://github.com/painteau/unflared/releases/download/2026.3.0.1/cloudflared-linux-amd64">
