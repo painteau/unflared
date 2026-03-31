@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.3.0.2 — 2026-03-31
+
+- **Fix** : `rc.unflared start` ne bloque plus la séquence de boot Unraid.
+  Le subshell background `( ) &` héritait du pipe fd ouvert par le système de plugins
+  (`popen()`/`pclose()`), ce qui empêchait `pclose()` de retourner tant que cloudflared
+  tournait — bloquant `rc.local` et retardant le démarrage d'emhttpd.
+
 ## 2026.3.0.1 — 2026-03-29
 
 Initial release.

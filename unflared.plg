@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name             "unflared">
   <!ENTITY author           "painteau">
-  <!ENTITY version          "2026.3.0.1">
+  <!ENTITY version          "2026.3.0.2">
   <!ENTITY pluginURL        "https://raw.githubusercontent.com/painteau/unflared/main/unflared.plg">
   <!ENTITY rawURL           "https://raw.githubusercontent.com/painteau/unflared/main">
   <!ENTITY cloudflaredVer   "2026.3.0">
@@ -17,6 +17,10 @@
         support="https://github.com/painteau/unflared">
 
   <CHANGES>
+    ###2026.3.0.2###
+    - Fix: rc.unflared start no longer blocks Unraid boot sequence
+      (background subshell inherited plugin pipe fd, causing pclose() to hang)
+
     ###2026.3.0.1###
     - Initial release, cloudflared 2026.3.0
     - Native service (no Docker dependency)
