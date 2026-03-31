@@ -46,7 +46,7 @@ start() {
       notify_crash
       sleep 5
     done
-  ) &
+  ) </dev/null >/dev/null 2>&1 &
   echo $! > "$PIDFILE"
   echo "cloudflared started (PID $!)"
 }
