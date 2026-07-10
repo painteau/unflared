@@ -2,11 +2,11 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name             "unflared">
   <!ENTITY author           "painteau">
-  <!ENTITY version          "2026.7.0.1">
+  <!ENTITY version          "2026.7.1.1">
   <!ENTITY pluginURL        "https://raw.githubusercontent.com/painteau/unflared/main/unflared.plg">
   <!ENTITY rawURL           "https://raw.githubusercontent.com/painteau/unflared/main">
-  <!ENTITY cloudflaredVer   "2026.7.0">
-  <!ENTITY cloudflaredURL   "https://github.com/painteau/unflared/releases/download/2026.7.0.1/cloudflared-linux-amd64">
+  <!ENTITY cloudflaredVer   "2026.7.1">
+  <!ENTITY cloudflaredURL   "https://github.com/painteau/unflared/releases/download/2026.7.1.1/cloudflared-linux-amd64">
 ]>
 
 <PLUGIN name="&name;"
@@ -17,6 +17,9 @@
         support="https://github.com/painteau/unflared">
 
   <CHANGES>
+    ###2026.7.1.1###
+    - Update cloudflared to 2026.7.1
+
     ###2026.7.0.1###
     - Update cloudflared to 2026.7.0
 
